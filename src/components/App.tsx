@@ -2036,7 +2036,9 @@ class App extends React.Component<AppProps, AppState> {
       gesture.pointers.size === 2 &&
       gesture.lastCenter &&
       initialScale &&
-      gesture.initialDistance
+      gesture.initialDistance &&
+      // prevent zooming on other than multi-touch
+      (!event.pointerType || event.pointerType === "touch")
     ) {
       const center = getCenter(gesture.pointers);
       const deltaX = center.x - gesture.lastCenter.x;
@@ -2506,6 +2508,12 @@ class App extends React.Component<AppProps, AppState> {
   private updateGestureOnPointerDown(
     event: React.PointerEvent<HTMLCanvasElement>,
   ): void {
+    // all pointer events other than touch should be singular & unique so clear
+    // state in case we have a leak
+    if (event.pointerType && event.pointerType !== "touch") {
+      gesture.pointers.clear();
+    }
+
     gesture.pointers.set(event.pointerId, {
       x: event.clientX,
       y: event.clientY,
